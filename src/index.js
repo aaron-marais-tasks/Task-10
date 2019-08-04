@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
 import Board from './Components/Board.jsx';
 import * as serviceWorker from './serviceWorker';
 
