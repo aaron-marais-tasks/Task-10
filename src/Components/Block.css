@@ -29,6 +29,10 @@
 	color: red;
 }
 
+.block.clear {
+	background-color: lightgray;
+}
+
 .block.clear[data-count="1"] {
 	color: blue;
 }

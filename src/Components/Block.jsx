@@ -10,6 +10,12 @@ export default class Block extends React.Component {
             revealed: false,
             flagged: false
         }
+
+        props.register({
+            reveal: this.revealBlock.bind(this),
+            clear: () => this.minesNear() === "",
+            isMine: this.props.isMine
+        })
     }
 
     mineAt = (x, y) =>
@@ -37,7 +43,12 @@ export default class Block extends React.Component {
     }
 
     revealBlock() {
-        if(this.state.revealed || this.state.flagged) return
+        if(this.state.revealed) {
+            this.props.revealAround()
+            return
+        }
+
+        if(this.state.flagged) return
 
         this.props.blockClick(this.state.isMine)
         this.setState({ revealed: true })
