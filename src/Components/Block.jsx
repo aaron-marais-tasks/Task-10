@@ -11,46 +11,78 @@ export default class Block extends React.Component {
             flagged: false
         }
 
-        props.register({
+        const {x, y} = props.position
+        props.register(x, y, {
             reveal: this.revealBlock.bind(this),
             clear: () => this.minesNear() === "",
-            isMine: this.props.isMine
+            isMine: this.props.isMine,
+            flagged: () => this.state.flagged
         })
     }
 
-    mineAt = (x, y) =>
+    componentWillReceiveProps(nextProps) {
+        this.setState({
+            isMine: nextProps.isMine || false,
+            revealed: false,
+            flagged: false
+        })
+
+        const {x, y} = nextProps.position
+        nextProps.register(x, y, {
+            reveal: this.revealBlock.bind(this),
+            clear: () => this.minesNear() === "",
+            isMine: nextProps.isMine
+        })
+    }
+
+    blockAt = (x, y) =>
     	y >= 0 && y < this.props.field.length &&
     	x >= 0 && x < this.props.field[0].length &&
-    	this.props.field[x][y].props.isMine
+    	this.props.field[x][y]
 
     minesNear() {
         let mines = 0
 
-        const x = this.props.position.x,
-        	y = this.props.position.y
+        const {x, y} = this.props.position
 
         // check mines in all directions
-        mines += this.mineAt(x - 1, y - 1);  // NW
-        mines += this.mineAt(x - 1, y);      // N
-        mines += this.mineAt(x - 1, y + 1);  // NE
-        mines += this.mineAt(x, y - 1);      // W
-        mines += this.mineAt(x, y + 1);      // E
-        mines += this.mineAt(x + 1, y - 1);  // SW
-        mines += this.mineAt(x + 1, y);      // S
-        mines += this.mineAt(x + 1, y + 1);  // SE
+        mines += this.blockAt(x - 1, y - 1).isMine  // NW
+        mines += this.blockAt(x - 1, y).isMine      // N
+        mines += this.blockAt(x - 1, y + 1).isMine  // NE
+        mines += this.blockAt(x, y - 1).isMine      // W
+        mines += this.blockAt(x, y + 1).isMine      // E
+        mines += this.blockAt(x + 1, y - 1).isMine  // SW
+        mines += this.blockAt(x + 1, y).isMine      // S
+        mines += this.blockAt(x + 1, y + 1).isMine  // SE
 
-	    return mines > 0 ? mines.toString() : ""
+        return mines > 0 ? mines.toString() : ""
+    }
+
+    minesNearAreFlagged() {
+        const {x, y} = this.props.position
+
+        // check mines in all directions
+        return this.blockAt(x - 1, y - 1).flagged &&
+            this.blockAt(x - 1, y).flagged &&
+            this.blockAt(x - 1, y + 1).flagged &&
+            this.blockAt(x, y - 1).flagged &&
+            this.blockAt(x, y + 1).flagged &&
+            this.blockAt(x + 1, y - 1).flagged &&
+            this.blockAt(x + 1, y).flagged &&
+            this.blockAt(x + 1, y + 1).flagged
     }
 
     revealBlock() {
         if(this.state.revealed) {
-            this.props.revealAround()
+            if(this.minesNear() && !this.minesNearAreFlagged()) return
+            const {x, y} = this.props.position
+            this.props.revealClose(x, y)
             return
         }
 
         if(this.state.flagged) return
 
-        this.props.blockClick(this.state.isMine)
+        this.props.click(this.state.isMine)
         this.setState({ revealed: true })
     }
 
