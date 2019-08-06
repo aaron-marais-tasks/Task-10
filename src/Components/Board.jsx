@@ -239,7 +239,7 @@ export default class extends React.Component {
 
                     {/* The amount of time we've taken */}
                     <div className="time">
-                        {this.state.time}
+                        {Math.floor(this.state.time / 60) + ":" + (this.state.time % 60)}
                     </div>
                 </div>
 
