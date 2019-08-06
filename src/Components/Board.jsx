@@ -40,7 +40,7 @@ export default class extends React.Component {
     }
 
     // Helper functions to limit flag placement in children
-    maxFlagsReached = () => this.state.flags >= 20
+    maxFlagsReached = () => this.state.flags >= 20 * 2.5
     setFlag = op => this.setState({flags: op(this.state.flags)})
 
     // Helper function for children to determine if alive
@@ -215,7 +215,7 @@ export default class extends React.Component {
                 <div className="info">
                     {/* How many flags we have left */}
                     <div className="flags">
-                        {20 - this.state.flags}
+                        {20 * 2.5 - this.state.flags}
                     </div>
 
                     {/* Display a happy or sad face depending on our result */}
