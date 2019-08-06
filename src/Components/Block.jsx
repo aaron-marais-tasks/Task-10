@@ -8,11 +8,13 @@ export default class Block extends React.Component {
         this.state = {
             isMine: props.isMine || false,
             revealed: false,
-            flagged: false
+            flagged: false,
+            enabled: true
         }
 
         const {x, y} = props.position
         props.register(x, y, {
+            disable: () => this.setState({enabled: false}),
             reveal: this.revealBlock.bind(this),
             clear: () => this.minesNear() === "",
             isMine: this.props.isMine,
@@ -29,50 +31,51 @@ export default class Block extends React.Component {
 
         const {x, y} = nextProps.position
         nextProps.register(x, y, {
+            disable: () => this.setState({enabled: false}),
             reveal: this.revealBlock.bind(this),
             clear: () => this.minesNear() === "",
-            isMine: nextProps.isMine
+            isMine: nextProps.isMine,
+            flagged: () => this.state.flagged
         })
     }
 
-    blockAt = (x, y) =>
-    	y >= 0 && y < this.props.field.length &&
-    	x >= 0 && x < this.props.field[0].length &&
-    	this.props.field[x][y]
+    blockAt = (x, y) => this.props.field[x] ? this.props.field[x][y] || {} : {}
 
-    minesNear() {
-        let mines = 0
-
+    blocksAround() {
         const {x, y} = this.props.position
 
-        // check mines in all directions
-        mines += this.blockAt(x - 1, y - 1).isMine  // NW
-        mines += this.blockAt(x - 1, y).isMine      // N
-        mines += this.blockAt(x - 1, y + 1).isMine  // NE
-        mines += this.blockAt(x, y - 1).isMine      // W
-        mines += this.blockAt(x, y + 1).isMine      // E
-        mines += this.blockAt(x + 1, y - 1).isMine  // SW
-        mines += this.blockAt(x + 1, y).isMine      // S
-        mines += this.blockAt(x + 1, y + 1).isMine  // SE
+        const directions = [
+            [x-1,y-1],  // NW
+            [x-1,y],    // N
+            [x-1,y+1],  // NE
+            [x,y-1],    // W
+            [x,y+1],    // E
+            [x+1,y-1],  // SW
+            [x+1,y],    // S
+            [x+1,y+1]   // SE
+        ]
 
-        return mines > 0 ? mines.toString() : ""
+        return directions.map(direction => this.blockAt(...direction))
+    }
+
+    minesNear() {
+        const count = this.blocksAround()
+            .filter(block => block && block.isMine)
+            .length
+
+        return count > 0 ? count.toString() : ""
     }
 
     minesNearAreFlagged() {
-        const {x, y} = this.props.position
+        const minesAround = this.blocksAround()
+            .filter(block => block && block.isMine)
 
-        // check mines in all directions
-        return this.blockAt(x - 1, y - 1).flagged &&
-            this.blockAt(x - 1, y).flagged &&
-            this.blockAt(x - 1, y + 1).flagged &&
-            this.blockAt(x, y - 1).flagged &&
-            this.blockAt(x, y + 1).flagged &&
-            this.blockAt(x + 1, y - 1).flagged &&
-            this.blockAt(x + 1, y).flagged &&
-            this.blockAt(x + 1, y + 1).flagged
+        return minesAround.length > 0 ? minesAround.every(block => block.flagged()) : true
     }
 
     revealBlock() {
+        if(this.state.flagged || !this.state.enabled || !this.props.isAlive()) return
+
         if(this.state.revealed) {
             if(this.minesNear() && !this.minesNearAreFlagged()) return
             const {x, y} = this.props.position
@@ -80,16 +83,18 @@ export default class Block extends React.Component {
             return
         }
 
-        if(this.state.flagged) return
-
-        this.props.click(this.state.isMine)
+        this.props.click(this.props.position)
         this.setState({ revealed: true })
     }
 
     flagBlock(e) {
     	e.preventDefault()
         if(this.state.revealed) return
-    	this.setState({flagged: !this.state.flagged})
+        if(!this.state.flagged && this.props.maxFlagsReached()) return
+    	this.setState({flagged: !this.state.flagged}, () => {
+            if(this.state.flagged) this.props.addFlag()
+            else this.props.removeFlag()
+        })
     }
 
     render() {

@@ -1,3 +1,5 @@
+@import 'https://fonts.googleapis.com/css?family=Orbitron&text=0123456789';
+
 body {
 	margin: 0;
 }
@@ -17,8 +19,25 @@ body {
 	transform: scale(2);
 }
 
-.game > svg {
+.info {
+	display: flex;
+	flex: 1;
+	width: 100%;
+	align-items: center;
+}
+
+.info > svg {
 	width: 1.5vw;
+}
+
+.info .time, .info .flags {
+	flex: 1;
+	display: flex;
+	font-family: 'Orbitron', sans-serif;
+}
+
+.info .time {
+	justify-content: flex-end;
 }
 
 .board {
