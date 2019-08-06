@@ -1,107 +1,156 @@
+/*
+    This file holds our board blocks
+*/
+
+// Import React and styling into scope
 import React from "react"
 import "./Block.css"
 
-export default class Block extends React.Component {
+// Export Block anonymous class
+export default class extends React.Component {
+    // Constructor for setting custom state
     constructor(props) {
         super(props)
 
+        // Set our initial
         this.state = {
-            isMine: props.isMine || false,
-            revealed: false,
-            flagged: false,
-            enabled: true
+            isMine: props.isMine,   // If is a mine
+            revealed: false,        // If revealed
+            flagged: false,         // If flagged
+            enabled: true           // If enabled (clickable)
         }
 
+        // Get our position on the board
         const {x, y} = props.position
+
+        // Register self by position
         props.register(x, y, {
-            disable: () => this.setState({enabled: false}),
-            reveal: this.revealBlock.bind(this),
-            clear: () => this.minesNear() === "",
-            isMine: this.props.isMine,
-            flagged: () => this.state.flagged
+            disable: () => this.setState({enabled: false}), // disable block
+            reveal: this.revealBlock.bind(this),            // reveal block
+            clear: () => this.minesNear() === "",           // if block is clear
+            isMine: this.props.isMine,                      // if block is mine
+            flagged: () => this.state.flagged               // if block is flagged
         })
     }
 
+    // When component is updated (board reset)
     componentWillReceiveProps(nextProps) {
         this.setState({
-            isMine: nextProps.isMine || false,
-            revealed: false,
-            flagged: false
+            isMine: nextProps.isMine,   // If is a mine
+            revealed: false,            // If revealed
+            flagged: false,             // If flagged
+            enabled: true               // If enabled (clickable)
         })
 
+        // Get our position on the board
         const {x, y} = nextProps.position
+
+        // Register self by position
         nextProps.register(x, y, {
-            disable: () => this.setState({enabled: false}),
-            reveal: this.revealBlock.bind(this),
-            clear: () => this.minesNear() === "",
-            isMine: nextProps.isMine,
-            flagged: () => this.state.flagged
+            disable: () => this.setState({enabled: false}), // disable block
+            reveal: this.revealBlock.bind(this),            // reveal block
+            clear: () => this.minesNear() === "",           // if block is clear
+            isMine: nextProps.isMine,                       // if block is mine
+            flagged: () => this.state.flagged               // if block is flagged
         })
     }
 
+    // Get the block register at a certain position 
+    // row ? (block || empty) : empty
     blockAt = (x, y) => this.props.field[x] ? this.props.field[x][y] || {} : {}
 
+    // Get blocks around a position
     blocksAround() {
+        // Our current position
         const {x, y} = this.props.position
 
+        // Our directions in which to check
         const directions = [
-            [x-1,y-1],  // NW
-            [x-1,y],    // N
-            [x-1,y+1],  // NE
-            [x,y-1],    // W
-            [x,y+1],    // E
-            [x+1,y-1],  // SW
-            [x+1,y],    // S
-            [x+1,y+1]   // SE
+            [x-1, y-1], [x-1, y], [x-1, y+1],  // NW, N, NE
+            [x,   y-1],           [x,   y+1],  //  W,     E
+            [x+1, y-1], [x+1, y], [x+1, y+1]   // SW, S, SE
         ]
 
+        // Map over directions and change to block registers
         return directions.map(direction => this.blockAt(...direction))
     }
 
+    // Check for mines near current block
     minesNear() {
+        // The amount of mines near our block
+        // Gets blocks around, filters out mines, and checks length
         const count = this.blocksAround()
             .filter(block => block && block.isMine)
             .length
 
+        // If more than 0 mines around current block, send amount; otherwise empty
         return count > 0 ? count.toString() : ""
     }
 
+    // Check if all mines nearby are flagged
     minesNearAreFlagged() {
+        // Get mines around current block
         const minesAround = this.blocksAround()
             .filter(block => block && block.isMine)
 
+        // If more than 0 mines, make sure that every mine is flagged; otherwise true
         return minesAround.length > 0 ? minesAround.every(block => block.flagged()) : true
     }
 
+    // Reveal this block
     revealBlock() {
+        // If block is flagged, enabled, or we're dead, don't allow action
         if(this.state.flagged || !this.state.enabled || !this.props.isAlive()) return
 
+        // If block is revealed
         if(this.state.revealed) {
+            // If we have mines near us, and they're not all flagged, stop execution
             if(this.minesNear() && !this.minesNearAreFlagged()) return
+
+            // Get our current position, and reveal close blocks
             const {x, y} = this.props.position
             this.props.revealClose(x, y)
             return
         }
 
+        // Send click event to our parent and set our revealed state to true
         this.props.click(this.props.position)
         this.setState({ revealed: true })
     }
 
+    // Flag current block
     flagBlock(e) {
+        // Stop context menu from popping up
     	e.preventDefault()
+
+        // Stop execution if revealed already
         if(this.state.revealed) return
+
+        // If current flagged state is false and we already have max flags, stop execution
         if(!this.state.flagged && this.props.maxFlagsReached()) return
+
+        // Reverse our flagged state
     	this.setState({flagged: !this.state.flagged}, () => {
+            // When state is complete, increment or decrement the board flag counter,
+            // based on if this was a flag or not
             if(this.state.flagged) this.props.addFlag()
             else this.props.removeFlag()
         })
     }
 
+    // Render our block
     render() {
+        // Optional props; if revealed, set our data-count to the amount
+        // of mines near us
     	const optionalProps = {}
     	if(this.state.revealed) optionalProps["data-count"] = this.minesNear()
 
         return (
+            /* Div container for block
+                Class name depends on current state (if revealed and if is mine)
+                Pass in optional props
+                On click handler
+                On right click handler */
         	<div
         		className={"block" + (
 	            	this.state.revealed ? (" " + (this.state.isMine ? "mine" : "clear")) : ""
@@ -110,7 +159,9 @@ export default class Block extends React.Component {
 	        	onClick={this.revealBlock.bind(this)}
 	        	onContextMenu={this.flagBlock.bind(this)}
 	    	>
+                {/* If it is revealed, show icon or text */}
 	    		{this.state.revealed ? (
+                    // If is mine, show bomb
 	    			this.state.isMine ? (
 	    				<svg className="bomb" viewBox="0 0 512 512">
 	    					<path fill="currentColor" d={"M384.5 144.5l56-56-17-17-56 56-52.2-52.2c-6.2-6.2-16.4-6.2-22.6 0l-28.4 "+
@@ -126,8 +177,11 @@ export default class Block extends React.Component {
 	    						"0-56 25.1-56 56 0 13.3-10.7 24-24 24s-24-10.7-24-24c0-57.3 46.7-104 104-104 13.3 0 24 10.7 24 24z"}
     						/>
 						</svg>
-    				) : this.minesNear()
+    				) : 
+                    // If not bomb, show text (amount of mines close)
+                    this.minesNear()
     			) : (
+                    // If flagged, show flag icon
     				this.state.flagged ? (
 		    			<svg className="flag" viewBox="0 0 512 512">
 		    				<path fill="currentColor" d={

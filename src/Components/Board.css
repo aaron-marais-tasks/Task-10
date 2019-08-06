@@ -1,9 +1,18 @@
+/*
+	This file holds our board's styling
+*/
+
+/* Import digital-like font */
 @import 'https://fonts.googleapis.com/css?family=Orbitron&text=0123456789';
 
+
+/* Remove body margin */
 body {
 	margin: 0;
 }
 
+/* Display our root as a relative flexbix, with 100 viewport height, with items
+	and content justified and aligned center */
 #root {
 	display: flex;
 	justify-content: center;
@@ -12,6 +21,7 @@ body {
 	position: relative;
 }
 
+/* Display our game as a column flexbox, with items centered, scaled up by 2 */
 .game {
 	display: flex;
 	flex-direction: column;
@@ -19,27 +29,32 @@ body {
 	transform: scale(2);
 }
 
+/* Display info as a flexbox taking 100% width, with items centered */
 .info {
 	display: flex;
-	flex: 1;
 	width: 100%;
 	align-items: center;
 }
 
+/* Set out emoticon to 1.5 viewport width */
 .info > svg {
 	width: 1.5vw;
 }
 
+/* Set our time and flags containers to be flexbox, taking as much space as
+	required (flex: 1), and set font to digital-style font */
 .info .time, .info .flags {
 	flex: 1;
 	display: flex;
 	font-family: 'Orbitron', sans-serif;
 }
 
+/* Set our time to be justified to end */
 .info .time {
 	justify-content: flex-end;
 }
 
+/* Add a top margin to our board */
 .board {
 	margin-top: .5vw;
 }

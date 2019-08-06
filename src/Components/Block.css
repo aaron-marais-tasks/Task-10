@@ -1,7 +1,14 @@
+/*
+	This file holds our block styling
+*/
+
+
+/* Display each row as a flexbox */
 .blockRow {
 	display: flex;
 }
 
+/* Add borders between blocks */
 .blockRow:first-child .block {
 	border-top: 1px solid black;
 }
@@ -15,6 +22,8 @@
 	border-bottom: 1px solid black;
 }
 
+/* Each block should be a 1vw x 1vw square, displayed as a flexbox, with items
+	and content centered */
 .block {
 	width: 1vw;
 	height: 1vw;
@@ -23,16 +32,19 @@
 	align-items: center;
 }
 
+/* Each flag or bomb should hav 70% width, 100% height, and red color */
 .block .flag, .block .bomb {
 	width: 70%;
 	height: 100%;
 	color: red;
 }
 
+/* Each cleared block should have light gray background color */
 .block.clear {
 	background-color: lightgray;
 }
 
+/* Set font color based on amount of mines close to block */
 .block.clear[data-count="1"] {
 	color: blue;
 }
