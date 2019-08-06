@@ -105,7 +105,7 @@ export default class extends React.Component {
             // If timer doesn't exist, make it
             if(this.state.timer === null) {
                 // Timer which updates every second
-                const timer = setInterval(() => this.setState({time: ++this.state.time}), 1000)
+                const timer = setInterval(() => this.setState({time: this.state.time + 1}), 1000)
 
                 // Add our timer into the state, and reveal around after state set
                 this.setState({timer}, () => {
