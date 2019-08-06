@@ -206,6 +206,17 @@ export default class extends React.Component {
         })
     }
 
+    getTime() {
+        let time = ""
+        const minutes = Math.floor(this.state.time / 60).toString()
+        const seconds = (this.state.time % 60).toString()
+
+        if(minutes.length < 2) minutes = "0" + minutes
+        if(seconds.length < 2) seconds = "0" + seconds
+
+        return `${minutes}:${seconds}`
+    }
+
     // Render our game
     render() {
         return (
@@ -239,7 +250,7 @@ export default class extends React.Component {
 
                     {/* The amount of time we've taken */}
                     <div className="time">
-                        {Math.floor(this.state.time / 60) + ":" + (this.state.time % 60)}
+                        {this.getTime()}
                     </div>
                 </div>
 
