@@ -98,7 +98,7 @@ export default class extends React.Component {
     }
 
     // Reveal this block
-    revealBlock() {
+    revealBlock(parent=false) {
         // If block is flagged, enabled, or we're dead, don't allow action
         if(this.state.flagged || !this.state.enabled || !this.props.isAlive()) return
 
