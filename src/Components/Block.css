@@ -9,27 +9,37 @@
 }
 
 /* Add borders between blocks */
+.block {
+	border: 1px solid black;
+}
+
 .blockRow:first-child .block {
-	border-top: 1px solid black;
+	border-top: 2px solid black;
+}
+
+.blockRow:last-child .block {
+	border-bottom: 2px solid black;
 }
 
 .block:first-child {
-	border-left: 1px solid black;
+	border-left: 2px solid black;
 }
 
-.block {
-	border-right: 1px solid black;
-	border-bottom: 1px solid black;
+.block:last-child {
+	border-right: 2px solid black;
 }
 
 /* Each block should be a 1vw x 1vw square, displayed as a flexbox, with items
-	and content centered */
+	and content centered. Relative position for incorrect flag placement */
 .block {
-	width: 1vw;
-	height: 1vw;
+	width: 2vw;
+	height: 2vw;
+	font-size: 1.2vw;
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	user-select: none;
+	position: relative;
 }
 
 /* Each flag or bomb should hav 70% width, 100% height, and red color */
@@ -37,6 +47,16 @@
 	width: 70%;
 	height: 100%;
 	color: red;
+}
+
+/* Incorrect flag placement */
+.block .wrong {
+	position: absolute;
+}
+
+/* Change bomb color to black if we won */
+.won .block .bomb {
+	color: black;
 }
 
 /* Each cleared block should have light gray background color */

@@ -44,9 +44,6 @@ export default class extends React.Component {
     maxFlagsReached = () => this.state.flags >= 20 * 2.5
     setFlag = op => this.setState({flags: op(this.state.flags)})
 
-    // Helper function for children to determine if alive
-    isAlive = () => this.state.alive
-
     // Returns a block's register
     getBlock = (x, y) => this.state.blockRegister[x] && this.state.blockRegister[x][y]
 
@@ -91,9 +88,8 @@ export default class extends React.Component {
     // Check if we've won
     checkWin = () => {
         // Check if all blocks are revealed
-        for (let x = 0; x < 20; x++) {
-            for (let y = 0; y < 20; y++) {
-                const block = this.getBlock(x, y)
+        for (const row of this.state.blockRegister) {
+            for (const block of row) {
                 if(!block.revealed && !block.isMine) return
             }
         }
@@ -103,6 +99,12 @@ export default class extends React.Component {
         this.setState({
             won: true,
             timer: null
+        }, () => {
+            for (const row of this.state.blockRegister) {
+                for (const block of row) {
+                    if(!block.revealed) block.reveal(false, true)
+                }
+            }
         })
     }
 
@@ -122,6 +124,14 @@ export default class extends React.Component {
 
         // If the block is a mine, clear our interval and set alive flag to false
         if(block.isMine) {
+            for (const row of this.state.blockRegister) {
+                for (const block of row) {
+                    if(!block.isMine && block.flagged()) {
+                        block.reveal(false, false, true)
+                    } else if(!block.revealed) block.reveal(false)
+                }
+            }
+            
             clearInterval(this.state.timer)
             this.setState({alive: false})
         } else 
@@ -166,13 +176,13 @@ export default class extends React.Component {
             register: this.registerBlock.bind(this),            // to register block
             revealClose: this.revealAround.bind(this),          // to reveal around
             field: this.state.blockRegister,                    // the block register
-            isAlive: this.isAlive,                              // if game is alive
+            isAlive: () => this.state.alive,                    // if game is alive
             maxFlagsReached: this.maxFlagsReached.bind(this),   // if max flags placed
             addFlag: () => this.setFlag(f => ++f),              // add a flag
             removeFlag: () => this.setFlag(f => --f)            // remove a flag
         }
 
-        // Popluate the board's blocks array
+        // Populate the board's blocks array
         // Loop {amount} times for columns
         for(let x = 0; x < amount; x++) {
             // Create a new array for rows
@@ -201,7 +211,7 @@ export default class extends React.Component {
             // mine counter, and add mine block into the array
             if(!blocks[x][y].isMine) {
                 mineCount++
-                blocks[x][y] = <Block key={x+"_"+y} position={{x,y}} {...blockmux} />
+                blocks[x][y] = <Block key={x+"_"+y} won={this.state.won} position={{x,y}} {...blockmux} />
             }
         }
 
@@ -287,7 +297,7 @@ export default class extends React.Component {
                 </div>
 
                 {/* Our game board */}
-                <div className="board">
+                <div className={"board" + (this.state.won ? " won" : "")}>
                     {/* Map each row to be a div.blockRow */}
                     {this.state.blocks.map((blocks, index) => (
                         <div className="blockRow" key={index}>{blocks}</div>

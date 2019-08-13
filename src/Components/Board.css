@@ -26,7 +26,6 @@ body {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	transform: scale(2);
 }
 
 /* Display info as a flexbox taking 100% width, with items centered */
@@ -34,11 +33,12 @@ body {
 	display: flex;
 	width: 100%;
 	align-items: center;
+	font-size: 2vw;
 }
 
 /* Set out emoticon to 1.5 viewport width */
 .info > svg {
-	width: 1.5vw;
+	width: 3vw;
 }
 
 /* Set our time and flags containers to be flexbox, taking as much space as
@@ -56,5 +56,5 @@ body {
 
 /* Add a top margin to our board */
 .board {
-	margin-top: .5vw;
+	margin-top: 1vw;
 }

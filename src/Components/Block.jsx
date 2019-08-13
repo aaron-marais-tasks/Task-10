@@ -14,10 +14,11 @@ export default class extends React.Component {
 
         // Set our initial
         this.state = {
-            isMine: props.isMine,   // If is a mine
             revealed: false,        // If revealed
             flagged: false,         // If flagged
-            enabled: true           // If enabled (clickable)
+            enabled: true,          // If enabled (clickable)
+            won: false,
+            alive: true
         }
 
         // Get our position on the board
@@ -34,25 +35,32 @@ export default class extends React.Component {
     }
 
     // When component is updated (board reset)
-    componentWillReceiveProps(nextProps) {
-        this.setState({
-            isMine: nextProps.isMine,   // If is a mine
-            revealed: false,            // If revealed
-            flagged: false,             // If flagged
-            enabled: true               // If enabled (clickable)
-        })
+    componentDidUpdate(prevProps) {
+        if(this.props.field.map(i => i.length).reduce((a, b) => a + b) < 20*20) {
+            // Get our position on the board
+            const {x, y} = this.props.position
 
-        // Get our position on the board
-        const {x, y} = nextProps.position
+            // Register self by position
+            this.props.register(x, y, {
+                disable: () => this.setState({enabled: false}), // disable block
+                reveal: this.revealBlock.bind(this),            // reveal block
+                clear: () => this.minesNear() === "",           // if block is clear
+                isMine: this.props.isMine,                       // if block is mine
+                flagged: () => this.state.flagged               // if block is flagged
+            })
 
-        // Register self by position
-        nextProps.register(x, y, {
-            disable: () => this.setState({enabled: false}), // disable block
-            reveal: this.revealBlock.bind(this),            // reveal block
-            clear: () => this.minesNear() === "",           // if block is clear
-            isMine: nextProps.isMine,                       // if block is mine
-            flagged: () => this.state.flagged               // if block is flagged
-        })
+            this.setState({
+                revealed: false,            // If revealed
+                flagged: false,             // If flagged
+                enabled: true,              // If enabled (clickable)
+                won: false,
+                alive: true
+            })
+        }
+
+        if(this.props.won === false && this.state.alive !== this.props.alive) {
+            this.setState({alive: this.props.alive})
+        }
     }
 
     // Get the block register at a certain position 
@@ -98,9 +106,17 @@ export default class extends React.Component {
     }
 
     // Reveal this block
-    revealBlock(parent=false) {
+    revealBlock(bubble=true, won=false, wrong=false) {
+        if(wrong) {
+            console.log("hey")
+            this.setState({incorrectFlag: true})
+            return
+        }
+        
         // If block is flagged, enabled, or we're dead, don't allow action
-        if(this.state.flagged || !this.state.enabled || !this.props.isAlive()) return
+        if(this.state.flagged || !this.state.enabled || !this.props.isAlive() || this.state.won) return
+
+        console.log(bubble, won, wrong)
 
         // If block is revealed
         if(this.state.revealed) {
@@ -108,13 +124,17 @@ export default class extends React.Component {
             if(this.minesNear() && !this.minesNearAreFlagged()) return
 
             // Get our current position, and reveal close blocks
-            const {x, y} = this.props.position
-            this.props.revealClose(x, y)
+            if(bubble) {
+                const {x, y} = this.props.position
+                this.props.revealClose(x, y)
+            }
+
             return
         }
 
         // Send click event to our parent and set our revealed state to true
-        this.props.click(this.props.position)
+        if(bubble) this.props.click(this.props.position)
+        else if(won) this.setState({won: true})
         this.setState({ revealed: true })
     }
 
@@ -147,22 +167,22 @@ export default class extends React.Component {
 
         return (
             /* Div container for block
-                Class name depends on current state (if revealed and if is mine)
+                Class name depends on current state (if revealed, is won and if is mine)
                 Pass in optional props
                 On click handler
                 On right click handler */
             <div
                 className={"block" + (
-                    this.state.revealed ? (" " + (this.state.isMine ? "mine" : "clear")) : ""
+                    this.state.revealed ? (" " + (this.props.isMine || this.state.won ? "mine" : "clear")) : ""
                 )}
                 {...optionalProps}
                 onClick={this.revealBlock.bind(this)}
                 onContextMenu={this.flagBlock.bind(this)}
             >
                 {/* If it is revealed, show icon or text */}
-                {this.state.revealed ? (
+                {this.state.revealed || this.state.won ? (
                     // If is mine, show bomb
-                    this.state.isMine ? (
+                    this.props.isMine ? (
                         <svg className="bomb" viewBox="0 0 512 512">
                             <path fill="currentColor" d={"M384.5 144.5l56-56-17-17-56 56-52.2-52.2c-6.2-6.2-16.4-6.2-22.6 0l-28.4 "+
                                 "28.4c-17.9-5-36.8-7.7-56.3-7.7C93.1 96 0 189.1 0 304s93.1 208 208 208 208-93.1 "+
@@ -183,15 +203,22 @@ export default class extends React.Component {
                 ) : (
                     // If flagged, show flag icon
                     this.state.flagged ? (
-                        <svg className="flag" viewBox="0 0 512 512">
-                            <path fill="currentColor" d={
-                                "M349.565 98.783C295.978 98.783 251.721 64 184.348 64c-24.955 0-47.309 4.384-68.045 12.013a55.947 55.947 "+
-                                "0 0 0 3.586-23.562C118.117 24.015 94.806 1.206 66.338.048 34.345-1.254 8 24.296 8 56c0 19.026 9.497 35.825 "+
-                                "24 45.945V488c0 13.255 10.745 24 24 24h16c13.255 0 24-10.745 24-24v-94.4c28.311-12.064 63.582-22.122 "+
-                                "114.435-22.122 53.588 0 97.844 34.783 165.217 34.783 48.169 0 86.667-16.294 122.505-40.858C506.84 359.452 "+
-                                "512 349.571 512 339.045v-243.1c0-23.393-24.269-38.87-45.485-29.016-34.338 15.948-76.454 31.854-116.95 31.854z"
-                            } />
-                        </svg>
+                        <React.Fragment>
+                            <svg className="flag" viewBox="0 0 512 512">
+                                <path fill="currentColor" d={
+                                    "M349.565 98.783C295.978 98.783 251.721 64 184.348 64c-24.955 0-47.309 4.384-68.045 12.013a55.947 55.947 "+
+                                    "0 0 0 3.586-23.562C118.117 24.015 94.806 1.206 66.338.048 34.345-1.254 8 24.296 8 56c0 19.026 9.497 35.825 "+
+                                    "24 45.945V488c0 13.255 10.745 24 24 24h16c13.255 0 24-10.745 24-24v-94.4c28.311-12.064 63.582-22.122 "+
+                                    "114.435-22.122 53.588 0 97.844 34.783 165.217 34.783 48.169 0 86.667-16.294 122.505-40.858C506.84 359.452 "+
+                                    "512 349.571 512 339.045v-243.1c0-23.393-24.269-38.87-45.485-29.016-34.338 15.948-76.454 31.854-116.95 31.854z"
+                                } />
+                            </svg>
+                            {this.state.incorrectFlag ? (
+                                <svg className="wrong" viewBox="0 0 320 512">
+                                    <path fill="currentColor" d="M193.94 256L296.5 153.44l21.15-21.15c3.12-3.12 3.12-8.19 0-11.31l-22.63-22.63c-3.12-3.12-8.19-3.12-11.31 0L160 222.06 36.29 98.34c-3.12-3.12-8.19-3.12-11.31 0L2.34 120.97c-3.12 3.12-3.12 8.19 0 11.31L126.06 256 2.34 379.71c-3.12 3.12-3.12 8.19 0 11.31l22.63 22.63c3.12 3.12 8.19 3.12 11.31 0L160 289.94 262.56 392.5l21.15 21.15c3.12 3.12 8.19 3.12 11.31 0l22.63-22.63c3.12-3.12 3.12-8.19 0-11.31L193.94 256z"></path>
+                                </svg>
+                            ) : null}
+                        </React.Fragment>
                     ) : null
                 )}
             </div>
