@@ -13,19 +13,13 @@ body {
 
 /* Display our root as a relative flexbix, with 100 viewport height, with items
 	and content justified and aligned center */
-#root {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	height: 100vh;
-	position: relative;
-}
 
 /* Display our game as a column flexbox, with items centered, scaled up by 2 */
 .game {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	opacity: 1;
 }
 
 /* Display info as a flexbox taking 100% width, with items centered */

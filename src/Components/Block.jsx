@@ -108,7 +108,6 @@ export default class extends React.Component {
     // Reveal this block
     revealBlock(bubble=true, won=false, wrong=false) {
         if(wrong) {
-            console.log("hey")
             this.setState({incorrectFlag: true})
             return
         }
